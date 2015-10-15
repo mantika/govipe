@@ -9,6 +9,8 @@ import (
 
 const TempFilePrefix = "govipe"
 
+// Edit opens the default editor with the specified input,
+// and returns the modified output.
 func Edit(input []byte) ([]byte, error) {
 	file, errFile := ioutil.TempFile(os.TempDir(), TempFilePrefix)
 	if errFile != nil {
