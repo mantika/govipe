@@ -1,18 +1,33 @@
 package govipe
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 )
 
-const TempFilePrefix = "govipe"
+const tempFilePrefix = "govipe"
+
+// Runner is used to execute the corresponding editor command.
+// Eventually different platforms can implement it's own Runner.
+type Runner interface {
+	Run(command *exec.Cmd) error
+}
+
+// CommandRunner calls Run on it's supplied Cmd argument.
+type CommandRunner struct{}
+
+// Run performs the command execution to make the editing
+func (e CommandRunner) Run(command *exec.Cmd) error {
+	return command.Run()
+}
+
+var defaultRunner Runner = CommandRunner{}
 
 // Edit opens the default editor with the specified input,
 // and returns the modified output.
 func Edit(input []byte) ([]byte, error) {
-	file, errFile := ioutil.TempFile(os.TempDir(), TempFilePrefix)
+	file, errFile := ioutil.TempFile(os.TempDir(), tempFilePrefix)
 	if errFile != nil {
 		return nil, errFile
 	}
@@ -24,14 +39,11 @@ func Edit(input []byte) ([]byte, error) {
 		return nil, errWrite
 	}
 
-	command := os.Getenv("EDITOR")
-
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s %s", command, file.Name()))
-
+	cmd := getCommand(file.Name())
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	errCmd := cmd.Run()
+	errCmd := defaultRunner.Run(cmd)
 
 	if errCmd != nil {
 		return nil, errCmd
@@ -43,4 +55,8 @@ func Edit(input []byte) ([]byte, error) {
 	}
 
 	return out, nil
+}
+
+func getCommand(filename string) *exec.Cmd {
+	return exec.Command(os.Getenv("EDITOR"), filename)
 }
