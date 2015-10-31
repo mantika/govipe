@@ -1,46 +1,54 @@
 package govipe
 
 import (
-	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 )
 
-const TempFilePrefix = "govipe"
+type Editor interface {
+	Edit(file string) error
+}
 
-// Edit opens the default editor with the specified input,
-// and returns the modified output.
-func Edit(input []byte) ([]byte, error) {
-	file, errFile := ioutil.TempFile(os.TempDir(), TempFilePrefix)
+var setEditor Editor
+
+func SetEditor(editor Editor) {
+	setEditor = editor
+}
+func GetEditor() Editor {
+	if setEditor == nil {
+		setEditor = NewSystemDefaultEditor()
+	}
+	return setEditor
+}
+
+const tempFilePrefix = "govipe"
+
+func Vipe(input io.Reader) (io.Reader, error) {
+	file, errFile := ioutil.TempFile(os.TempDir(), tempFilePrefix)
 	if errFile != nil {
 		return nil, errFile
 	}
+	file.Chmod(os.ModeTemporary | 0600)
 	defer os.Remove(file.Name())
 
-	fileMode := os.FileMode(0600)
-	errWrite := ioutil.WriteFile(file.Name(), input, os.ModeTemporary|fileMode)
-	if errWrite != nil {
-		return nil, errWrite
+	_, errCopy := io.Copy(file, input)
+	if errCopy != nil {
+		return nil, errCopy
 	}
 
-	command := os.Getenv("EDITOR")
-
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s %s", command, file.Name()))
-
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	errCmd := cmd.Run()
-
-	if errCmd != nil {
-		return nil, errCmd
+	editor := GetEditor()
+	if err := editor.Edit(file.Name()); err != nil {
+		return nil, err
 	}
-
-	out, errOut := ioutil.ReadFile(file.Name())
-	if errOut != nil {
-		return nil, errOut
+	_, errSeek := file.Seek(0, 0)
+	if errSeek != nil {
+		file.Close()
+		if file, err := os.Open(file.Name()); err != nil {
+			return nil, err
+		} else {
+			return file, nil
+		}
 	}
-
-	return out, nil
+	return file, nil
 }
