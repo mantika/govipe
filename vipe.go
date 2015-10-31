@@ -29,7 +29,6 @@ func Vipe(input io.Reader) (io.Reader, error) {
 	if errFile != nil {
 		return nil, errFile
 	}
-	file.Chmod(os.ModeTemporary | 0600)
 	defer os.Remove(file.Name())
 
 	_, errCopy := io.Copy(file, input)
