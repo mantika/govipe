@@ -14,7 +14,7 @@ type Runnable interface {
 func TestRunEditorSetInEnvironment(t *testing.T) {
 	os.Setenv("EDITOR", "vim")
 
-	editor := &SystemDefaultEditor{}
+	editor := &systemDefaultEditor{}
 	editor.Runner = func(cmd *exec.Cmd) error {
 		assert.Equal(t, []string{"vim", "something.txt"}, cmd.Args)
 

@@ -5,19 +5,19 @@ import (
 	"os/exec"
 )
 
-type SystemDefaultEditor struct {
+type systemDefaultEditor struct {
 	Runner func(*exec.Cmd) error
 }
 
-func NewSystemDefaultEditor() *SystemDefaultEditor {
-	return &SystemDefaultEditor{
+func newSystemDefaultEditor() *systemDefaultEditor {
+	return &systemDefaultEditor{
 		Runner: func(cmd *exec.Cmd) error {
 			return cmd.Run()
 		},
 	}
 }
 
-func (s *SystemDefaultEditor) Edit(filename string) error {
+func (s *systemDefaultEditor) Edit(filename string) error {
 	command := os.Getenv("EDITOR")
 
 	cmd := exec.Command(command, filename)

@@ -6,24 +6,30 @@ import (
 	"os"
 )
 
+// Editor is the interface used by different supported editors
 type Editor interface {
 	Edit(file string) error
 }
 
 var setEditor Editor
 
+// SetEditor sets the default editor
 func SetEditor(editor Editor) {
 	setEditor = editor
 }
+
+// GetEditor returns the current editor
 func GetEditor() Editor {
 	if setEditor == nil {
-		setEditor = NewSystemDefaultEditor()
+		setEditor = newSystemDefaultEditor()
 	}
 	return setEditor
 }
 
 const tempFilePrefix = "govipe"
 
+// Vipe receives a Reader and sends its contect
+// to the default editor
 func Vipe(input io.Reader) (io.Reader, error) {
 	file, errFile := ioutil.TempFile(os.TempDir(), tempFilePrefix)
 	if errFile != nil {
