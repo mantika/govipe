@@ -43,10 +43,9 @@ func Vipe(input io.Reader) (io.Reader, error) {
 	_, errSeek := file.Seek(0, 0)
 	if errSeek != nil {
 		file.Close()
-		if file, err := os.Open(file.Name()); err != nil {
+		var err error
+		if file, err = os.Open(file.Name()); err != nil {
 			return nil, err
-		} else {
-			return file, nil
 		}
 	}
 	return file, nil
