@@ -22,3 +22,12 @@ func TestRunEditorSetInEnvironment(t *testing.T) {
 	}
 	editor.Edit("something.txt")
 }
+
+func TestErrorIfVariableUnset(t *testing.T) {
+	os.Setenv("EDITOR", "")
+	editor := newSystemDefaultEditor()
+	err := editor.Edit("something.txt")
+	if err == nil {
+		t.Fail()
+	}
+}
