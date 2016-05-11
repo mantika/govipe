@@ -22,7 +22,7 @@ func (s *systemDefaultEditor) Edit(filename string) error {
 	command := os.Getenv("EDITOR")
 
 	if command == "" {
-		errors.New("EDITOR variable not set")
+		return errors.New("EDITOR variable not set")
 	}
 
 	cmd := exec.Command(command, filename)

@@ -27,7 +27,7 @@ func TestErrorIfVariableUnset(t *testing.T) {
 	os.Setenv("EDITOR", "")
 	editor := newSystemDefaultEditor()
 	err := editor.Edit("something.txt")
-	if err == nil {
+	if err.Error() != "EDITOR variable not set" {
 		t.Fail()
 	}
 }
